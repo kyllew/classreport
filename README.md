@@ -1,5 +1,3 @@
-Here's the formatted .md file:
-
 # Class Report Calculator
 
 A web application that analyzes course feedback data and generates comprehensive reports including CSAT scores and AI-powered feedback summaries using AWS Bedrock.
