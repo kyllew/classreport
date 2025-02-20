@@ -87,7 +87,7 @@ def get_bedrock_summary(feedback):
         print(f"Error getting Bedrock summary: {str(e)}")
         return None
 
-def analyze_instructor_ratings(df):
+def analyze_instructor_ratings(df, enable_ai=False):
     """
     Analyze instructor ratings from the CSV file
     """
@@ -173,14 +173,13 @@ def analyze_instructor_ratings(df):
             results['Classroom'] = classroom_score
             results['Delivery_Type'] = 'Virtual (VILT)' if is_vilt else 'In-Person (ILT)'
         
-        # Organize feedback into two categories
+        # Extract feedback
         feedback = {
-            'recommendations': [],  # What would you recommend changing
-            'highlights': []       # What did you like most
+            'recommendations': [],
+            'highlights': []
         }
         
-        # Collect feedback about recommended changes
-        if 'QID138_TEXT' in df.columns:  # What would you recommend changing about this course?
+        if 'QID138_TEXT' in df.columns:
             texts = df['QID138_TEXT'].dropna().tolist()
             feedback['recommendations'].extend([
                 str(text).strip() 
@@ -188,8 +187,7 @@ def analyze_instructor_ratings(df):
                 if str(text).strip()
             ])
         
-        # Collect feedback about what they liked most
-        if 'QID142_TEXT' in df.columns:  # What did you LIKE MOST about this course?
+        if 'QID142_TEXT' in df.columns:
             texts = df['QID142_TEXT'].dropna().tolist()
             feedback['highlights'].extend([
                 str(text).strip() 
@@ -197,13 +195,13 @@ def analyze_instructor_ratings(df):
                 if str(text).strip()
             ])
         
-        # Get AI summary if there's feedback
-        if feedback['highlights'] or feedback['recommendations']:
+        results['feedback'] = feedback
+        
+        # Only get AI summary if enabled and there's feedback to analyze
+        if enable_ai and (feedback['highlights'] or feedback['recommendations']):
             ai_summary = get_bedrock_summary(feedback)
             if ai_summary:
                 results['ai_summary'] = ai_summary
-        
-        results['feedback'] = feedback
         
         print("Analysis Results:", results)
         return results
@@ -218,48 +216,34 @@ def analyze_instructor_ratings(df):
 def index():
     return render_template('index.html')
 
-@app.route('/upload', methods=['POST'])
-def upload_file():
+@app.route('/analyze', methods=['POST'])
+def analyze():
     try:
         if 'file' not in request.files:
-            return jsonify({'error': 'No file part'}), 400
+            return jsonify({'error': 'No file uploaded'}), 400
         
         file = request.files['file']
+        enable_ai = request.form.get('enableAI') == 'true'
         
         if file.filename == '':
-            return jsonify({'error': 'No selected file'}), 400
+            return jsonify({'error': 'No file selected'}), 400
         
         if file and allowed_file(file.filename):
-            # Create upload folder if it doesn't exist
-            os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+            # Read the CSV file
+            df = pd.read_csv(file)
             
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
-            file.save(filepath)
+            # Analyze the data
+            results = analyze_instructor_ratings(df, enable_ai)
             
-            try:
-                # Read CSV file
-                df = pd.read_csv(filepath)
+            if results is None:
+                return jsonify({'error': 'Error analyzing data'}), 500
                 
-                # Analyze the data
-                results = analyze_instructor_ratings(df)
-                
-                if results:
-                    return jsonify(results)
-                else:
-                    return jsonify({'error': 'Error analyzing data'}), 500
-                
-            except Exception as e:
-                return jsonify({'error': f'Error processing file: {str(e)}'}), 500
+            return jsonify(results)
             
-            finally:
-                # Clean up the uploaded file
-                if os.path.exists(filepath):
-                    os.remove(filepath)
-        
         return jsonify({'error': 'Invalid file type'}), 400
-    
+        
     except Exception as e:
-        return jsonify({'error': f'Server error: {str(e)}'}), 500
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)

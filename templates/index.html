@@ -119,6 +119,11 @@
                     <label for="file" class="form-label">Upload CSV File</label>
                     <input type="file" class="form-control" id="file" accept=".csv" required>
                 </div>
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="enableAI">
+                    <label class="form-check-label" for="enableAI">Enable AI Analysis</label>
+                    <small class="form-text text-muted d-block">Uses AWS Bedrock to analyze feedback (additional charges may apply)</small>
+                </div>
                 <button type="submit" class="btn btn-primary">Analyze</button>
             </form>
         </div>
@@ -218,30 +223,25 @@
     <script>
         document.getElementById('uploadForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
-            const fileInput = document.getElementById('file');
-            const file = fileInput.files[0];
-            
-            if (!file) {
-                showError('Please select a file');
-                return;
-            }
-
             const formData = new FormData();
-            formData.append('file', file);
-
+            const fileInput = document.getElementById('file');
+            const enableAI = document.getElementById('enableAI').checked;
+            
+            formData.append('file', fileInput.files[0]);
+            formData.append('enableAI', enableAI);
+            
             document.getElementById('loading').style.display = 'block';
-            document.getElementById('results').style.display = 'none';
             document.getElementById('error').style.display = 'none';
-
+            document.getElementById('results').style.display = 'none';
+            
             try {
-                const response = await fetch('/upload', {
+                const response = await fetch('/analyze', {
                     method: 'POST',
                     body: formData
                 });
-
+                
                 const data = await response.json();
-
+                
                 if (response.ok) {
                     displayResults(data);
                 } else {
@@ -268,19 +268,17 @@
                 document.getElementById('classroomQids').textContent = classroomQids;
             }
 
-            // Display feedback
-            displayFeedback(data.feedback);
-            
-            // Display AI summary if available
+            // Show/hide AI summary section based on whether it's available
             const aiSummarySection = document.getElementById('aiSummary');
-            const aiSummaryContent = document.getElementById('aiSummaryContent');
-            
             if (data.ai_summary) {
-                aiSummaryContent.textContent = data.ai_summary;
+                document.getElementById('aiSummaryContent').textContent = data.ai_summary;
                 aiSummarySection.style.display = 'block';
             } else {
                 aiSummarySection.style.display = 'none';
             }
+            
+            // Display feedback
+            displayFeedback(data.feedback);
             
             document.getElementById('results').style.display = 'block';
         }
