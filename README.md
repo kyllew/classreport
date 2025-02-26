@@ -22,7 +22,7 @@ A web application that analyzes course feedback data and generates comprehensive
 
 1. Clone the repository:
 ```bash
-git clone github.com/yourusername/classreport.git
+git clone github.com/yourusername/classreport.git](https://github.com/kyllew/classreport.git
 cd classreport
 ```
 
