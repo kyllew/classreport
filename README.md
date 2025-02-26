@@ -22,8 +22,8 @@ A web application that analyzes course feedback data and generates comprehensive
 
 1. Clone the repository:
 ```bash
-git clone github.com/yourusername/class-report-calculator.git
-cd class-report-calculator
+git clone github.com/yourusername/classreport.git
+cd classreport
 ```
 
 2. Create and activate a virtual environment:
