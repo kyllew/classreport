@@ -13,44 +13,110 @@ A web application that analyzes course feedback data and generates comprehensive
 
 ## Prerequisites
 
-1. Python 3.8 or higher
-2. AWS account with Bedrock access
-3. AWS CLI configured with appropriate credentials
-4. Required Python packages (see requirements.txt)
+- Python 3.8 or higher
+- AWS account with Bedrock access
+- AWS CLI configured with appropriate credentials
 
-## Installation
+## Installation and Setup
 
-1. Clone the repository:
-```bash
-git clone github.com/yourusername/classreport.git](https://github.com/kyllew/classreport.git
-cd classreport
-```
+### MacBook (macOS)
 
-2. Create and activate a virtual environment:
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
+1. **Install Python**
+   ```bash
+   # Install Homebrew (if not already installed)
+   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-3. Install required packages:
-```bash
-pip install -r requirements.txt
-```
+   # Install Python
+   brew install python
+   ```
 
-4. Configure AWS credentials:
-```bash
-aws configure
-```
+2. **Clone the Repository**
+   ```bash
+   git clone https://github.com/kyllew/classreport.git
+   cd class-report-calculator
+   ```
 
-Enter your AWS credentials when prompted:
-- AWS Access Key ID
-- AWS Secret Access Key
-- Default region (use 'us-east-1' for Bedrock)
-- Default output format (json)
+3. **Create Virtual Environment**
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate
+   ```
+
+4. **Install Dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+5. **Configure AWS Credentials**
+   ```bash
+   aws configure
+   # Enter your AWS Access Key ID
+   # Enter your AWS Secret Access Key
+   # Default region (us-east-1)
+   # Default output format (json)
+   ```
+
+6. **Run the Application**
+   ```bash
+   python3 -m flask run
+   ```
+
+### Windows
+
+1. **Install Python**
+   - Download Python from [python.org](https://www.python.org/downloads/windows/)
+   - During installation, check "Add Python to PATH"
+
+2. **Install Git** (if not already installed)
+   - Download from [git-scm.com](https://git-scm.com/download/win)
+
+3. **Open Command Prompt or PowerShell**
+   ```powershell
+   # Clone the Repository
+   git clone https://github.com/yourusername/class-report-calculator.git
+   cd class-report-calculator
+
+   # Create Virtual Environment
+   python -m venv venv
+   venv\Scripts\activate
+
+   # Install Dependencies
+   pip install -r requirements.txt
+   ```
+
+4. **Configure AWS Credentials**
+   ```powershell
+   aws configure
+   # Enter your AWS Access Key ID
+   # Enter your AWS Secret Access Key
+   # Default region (us-east-1)
+   # Default output format (json)
+   ```
+
+5. **Run the Application**
+   ```powershell
+   python -m flask run
+   ```
+
+## Troubleshooting
+
+### Common Issues
+
+1. **AWS Credentials**
+   - Ensure your AWS IAM user has Bedrock access
+   - Verify credentials are correctly configured
+   - Check region matches Bedrock service region
+
+2. **Python Version**
+   - Confirm Python version: `python --version`
+   - Recommended: Python 3.8 or higher
+
+3. **Virtual Environment**
+   - Always activate virtual environment before running
+   - Reinstall dependencies if issues occur: `pip install -r requirements.txt`
 
 ## Project Structure
 
-```
 class-report-calculator/
 ├── CsatAnalyser/
 │   ├── __init__.py
@@ -59,29 +125,22 @@ class-report-calculator/
 │       └── index.html
 ├── requirements.txt
 └── README.md
-```
 
 ## Required Packages
 
 Create a `requirements.txt` file with the following dependencies:
-```
 flask==2.0.1
 pandas==1.3.3
 boto3==1.28.0
 python-dotenv==0.19.0
-```
 
 ## Usage
 
 1. Start the Flask application:
-```bash
 python -m flask run
-```
 
 2. Open your web browser and navigate to:
-```
 http://localhost:5000
-```
 
 3. Upload your CSV file containing course feedback data. The file should include the following columns:
    - QID1, QID2 (Overall Satisfaction)
@@ -95,10 +154,8 @@ http://localhost:5000
 ## CSV Format Requirements
 
 Your CSV file should contain the following columns:
-```
 QID1,QID2,QID127,QID128,QID129,QID31,QID67,QID32,QID58,QID59,QID130,QID138_TEXT,QID142_TEXT
 5,4,5,5,4,...
-```
 
 ## Rating Scale
 
@@ -114,35 +171,25 @@ The application expects ratings on a 5-point scale:
 For production deployment:
 
 1. Set up proper security measures:
-```python
 # In your Flask application
 app.config['SECRET_KEY'] = 'your-secret-key'
-```
 
 2. Use a production-grade server:
-```bash
 pip install gunicorn
 gunicorn -w 4 -b 0.0.0.0:8000 "CsatAnalyser:create_app()"
-```
 
 ## Contributing
 
 1. Fork the repository
 
 2. Create your feature branch:
-```bash
 git checkout -b feature/new-feature
-```
 
 3. Commit your changes:
-```bash
 git commit -am 'Add new feature'
-```
 
 4. Push to the branch:
-```bash
 git push origin feature/new-feature
-```
 
 5. Submit a pull request
 
@@ -159,34 +206,23 @@ git push origin feature/new-feature
 1. Create a new repository on GitHub
 
 2. Initialize git in your local project:
-```bash
 git init
-```
 
 3. Add your files:
-```bash
 git add .
-```
 
 4. Create initial commit:
-```bash
 git commit -m "Initial commit"
-```
 
 5. Add remote repository:
-```bash
-git remote add origin github.com/yourusername/class-report-calculator.git
-```
+git remote add origin https://github.com/yourusername/class-report-calculator.git
 
 6. Push to GitHub:
-```bash
 git push -u origin main
-```
 
 ## .gitignore File
 
 Create a `.gitignore` file with the following content:
-```
 # Python
 __pycache__/
 *.py[cod]
@@ -209,7 +245,6 @@ uploads/
 
 # System
 .DS_Store
-```
 
 ## License
 
