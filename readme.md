@@ -13,32 +13,107 @@ A web application that analyzes course feedback data and generates comprehensive
 
 ## Prerequisites
 
-1. Python 3.8 or higher
-2. AWS account with Bedrock access
-3. AWS CLI configured with appropriate credentials
-4. Required Python packages (see requirements.txt)
+- Python 3.8 or higher
+- AWS account with Bedrock access
+- AWS CLI configured with appropriate credentials
 
-## Installation
+## Installation and Setup
 
-1. Clone the repository:
-git clone https://github.com/yourusername/class-report-calculator.git
-cd class-report-calculator
+### MacBook (macOS)
 
-2. Create and activate a virtual environment:
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+1. **Install Python**
+   ```bash
+   # Install Homebrew (if not already installed)
+   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-3. Install required packages:
-pip install -r requirements.txt
+   # Install Python
+   brew install python
+   ```
 
-4. Configure AWS credentials:
-aws configure
+2. **Clone the Repository**
+   ```bash
+   git clone https://github.com/kyllew/classreport.git
+   cd class-report-calculator
+   ```
 
-Enter your AWS credentials when prompted:
-- AWS Access Key ID
-- AWS Secret Access Key
-- Default region (use 'us-east-1' for Bedrock)
-- Default output format (json)
+3. **Create Virtual Environment**
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate
+   ```
+
+4. **Install Dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+5. **Configure AWS Credentials**
+   ```bash
+   aws configure
+   # Enter your AWS Access Key ID
+   # Enter your AWS Secret Access Key
+   # Default region (us-east-1)
+   # Default output format (json)
+   ```
+
+6. **Run the Application**
+   ```bash
+   python3 -m flask run
+   ```
+
+### Windows
+
+1. **Install Python**
+   - Download Python from [python.org](https://www.python.org/downloads/windows/)
+   - During installation, check "Add Python to PATH"
+
+2. **Install Git** (if not already installed)
+   - Download from [git-scm.com](https://git-scm.com/download/win)
+
+3. **Open Command Prompt or PowerShell**
+   ```powershell
+   # Clone the Repository
+   git clone https://github.com/yourusername/class-report-calculator.git
+   cd class-report-calculator
+
+   # Create Virtual Environment
+   python -m venv venv
+   venv\Scripts\activate
+
+   # Install Dependencies
+   pip install -r requirements.txt
+   ```
+
+4. **Configure AWS Credentials**
+   ```powershell
+   aws configure
+   # Enter your AWS Access Key ID
+   # Enter your AWS Secret Access Key
+   # Default region (us-east-1)
+   # Default output format (json)
+   ```
+
+5. **Run the Application**
+   ```powershell
+   python -m flask run
+   ```
+
+## Troubleshooting
+
+### Common Issues
+
+1. **AWS Credentials**
+   - Ensure your AWS IAM user has Bedrock access
+   - Verify credentials are correctly configured
+   - Check region matches Bedrock service region
+
+2. **Python Version**
+   - Confirm Python version: `python --version`
+   - Recommended: Python 3.8 or higher
+
+3. **Virtual Environment**
+   - Always activate virtual environment before running
+   - Reinstall dependencies if issues occur: `pip install -r requirements.txt`
 
 ## Project Structure
 
