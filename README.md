@@ -38,8 +38,8 @@ A web application that analyzes course feedback data and generates comprehensive
 
 3. **Create Virtual Environment**
    ```bash
-   python3 -m venv venv
-   source venv/bin/activate
+   python3 -m venv wenv
+   source wenv/bin/activate
    ```
 
 4. **Install Dependencies**
@@ -58,7 +58,15 @@ A web application that analyzes course feedback data and generates comprehensive
 
 6. **Run the Application**
    ```bash
+   # Set Flask application
+   export FLASK_APP=main
+   # Optional: Enable debug mode
+   export FLASK_DEBUG=1
+   # Run Flask
    python3 -m flask run
+   
+   # Alternative command:
+   python3 -m flask --app main run
    ```
 
 ### Windows
@@ -73,12 +81,12 @@ A web application that analyzes course feedback data and generates comprehensive
 3. **Open Command Prompt or PowerShell**
    ```powershell
    # Clone the Repository
-   git clone https://github.com/yourusername/class-report-calculator.git
-   cd class-report-calculator
+   git clone https://github.com/kyllew/classreport.git
+   cd classreport
 
    # Create Virtual Environment
-   python -m venv venv
-   venv\Scripts\activate
+   python -m venv wenv
+   wenv\Scripts\activate
 
    # Install Dependencies
    pip install -r requirements.txt
@@ -95,49 +103,51 @@ A web application that analyzes course feedback data and generates comprehensive
 
 5. **Run the Application**
    ```powershell
+   # Set Flask application
+   $env:FLASK_APP = "main"
+   # Optional: Enable debug mode
+   $env:FLASK_DEBUG = "1"
+   # Run Flask
    python -m flask run
+   
+   # Alternative command:
+   python -m flask --app main run
    ```
-
-## Troubleshooting
-
-### Common Issues
-
-1. **AWS Credentials**
-   - Ensure your AWS IAM user has Bedrock access
-   - Verify credentials are correctly configured
-   - Check region matches Bedrock service region
-
-2. **Python Version**
-   - Confirm Python version: `python --version`
-   - Recommended: Python 3.8 or higher
-
-3. **Virtual Environment**
-   - Always activate virtual environment before running
-   - Reinstall dependencies if issues occur: `pip install -r requirements.txt`
 
 ## Project Structure
 
-class-report-calculator/
-├── CsatAnalyser/
-│   ├── __init__.py
-│   ├── main.py
-│   └── templates/
-│       └── index.html
-├── requirements.txt
-└── README.md
+```
+classreport/
+├── main.py                 # Main Flask application
+├── requirements.txt        # Python dependencies
+├── README.md              # Project documentation
+├── templates/             # HTML templates
+│   └── index.html         # Main interface template
+└── uploads/              # Directory for uploaded files
+```
 
 ## Required Packages
 
-Create a `requirements.txt` file with the following dependencies:
-flask==2.0.1
-pandas==1.3.3
+Current dependencies in `requirements.txt`:
+```
+numpy==1.24.3
+pandas==2.0.3
+flask==2.3.2
 boto3==1.28.0
-python-dotenv==0.19.0
+python-dotenv==1.0.0
+openpyxl==3.1.2
+gunicorn==20.1.0
+requests==2.31.0
+jinja2==3.1.2
+markupsafe==2.1.3
+```
 
 ## Usage
 
 1. Start the Flask application:
-python -m flask run
+```bash
+python -m flask --app main run
+```
 
 2. Open your web browser and navigate to:
 http://localhost:5000
@@ -151,47 +161,45 @@ http://localhost:5000
    - QID138_TEXT (Improvement recommendations)
    - QID142_TEXT (Positive feedback)
 
-## CSV Format Requirements
+## Troubleshooting
 
-Your CSV file should contain the following columns:
-QID1,QID2,QID127,QID128,QID129,QID31,QID67,QID32,QID58,QID59,QID130,QID138_TEXT,QID142_TEXT
-5,4,5,5,4,...
+### Common Issues
 
-## Rating Scale
+1. **Flask Application Not Found**
+   - Ensure you're in the correct directory
+   - Use `python -m flask --app main run`
+   - Or set environment variable: `export FLASK_APP=main` (Mac/Linux) or `$env:FLASK_APP = "main"` (Windows)
 
-The application expects ratings on a 5-point scale:
-- 5: Strongly Agree / Extremely Satisfied
-- 4: Agree / Satisfied
-- 3: Neutral
-- 2: Disagree / Dissatisfied
-- 1: Strongly Disagree / Extremely Dissatisfied
+2. **NumPy/Pandas Compatibility Issues**
+   If you encounter a "numpy.dtype size changed" error:
+   ```bash
+   # Deactivate and remove existing environment
+   deactivate
+   rm -rf wenv
+   
+   # Create new environment and install packages in correct order
+   python3 -m venv wenv
+   source wenv/bin/activate
+   pip install --upgrade pip setuptools wheel
+   pip install numpy==1.24.3
+   pip install pandas==2.0.3
+   pip install -r requirements.txt
+   ```
 
-## Deployment
+3. **AWS Credentials**
+   - Ensure your AWS IAM user has Bedrock access
+   - Verify credentials are correctly configured
+   - Check region matches Bedrock service region
 
-For production deployment:
+4. **Python/Dependencies**
+   - Confirm Python version: `python --version`
+   - Ensure virtual environment is activated
+   - Try reinstalling dependencies: `pip install -r requirements.txt`
 
-1. Set up proper security measures:
-# In your Flask application
-app.config['SECRET_KEY'] = 'your-secret-key'
-
-2. Use a production-grade server:
-pip install gunicorn
-gunicorn -w 4 -b 0.0.0.0:8000 "CsatAnalyser:create_app()"
-
-## Contributing
-
-1. Fork the repository
-
-2. Create your feature branch:
-git checkout -b feature/new-feature
-
-3. Commit your changes:
-git commit -am 'Add new feature'
-
-4. Push to the branch:
-git push origin feature/new-feature
-
-5. Submit a pull request
+5. **Virtual Environment**
+   - Mac/Linux: `source wenv/bin/activate`
+   - Windows: `wenv\Scripts\activate`
+   - Verify activation: `which python` or `where python`
 
 ## Security Notes
 
@@ -200,51 +208,6 @@ git push origin feature/new-feature
 - Implement proper input validation
 - Set up CORS policies for production
 - Regularly update dependencies
-
-## GitHub Upload Instructions
-
-1. Create a new repository on GitHub
-
-2. Initialize git in your local project:
-git init
-
-3. Add your files:
-git add .
-
-4. Create initial commit:
-git commit -m "Initial commit"
-
-5. Add remote repository:
-git remote add origin https://github.com/yourusername/class-report-calculator.git
-
-6. Push to GitHub:
-git push -u origin main
-
-## .gitignore File
-
-Create a `.gitignore` file with the following content:
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-venv/
-.env
-
-# IDE
-.vscode/
-.idea/
-
-# AWS
-.aws/
-
-# Logs
-*.log
-
-# Uploaded files
-uploads/
-
-# System
-.DS_Store
 
 ## License
 
