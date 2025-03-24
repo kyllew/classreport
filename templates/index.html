@@ -145,7 +145,6 @@
                     <div class="score-box">
                         <div>
                             <h5>Overall Satisfaction</h5>
-                            <small class="text-muted">QID1, QID2</small>
                         </div>
                         <div class="score-value" id="overallScore">-</div>
                     </div>
@@ -154,7 +153,6 @@
                     <div class="score-box">
                         <div>
                             <h5>Instructor CSAT</h5>
-                            <small class="text-muted">QID127, QID128, QID129</small>
                         </div>
                         <div class="score-value" id="instructorScore">-</div>
                     </div>
@@ -163,7 +161,6 @@
                     <div class="score-box">
                         <div>
                             <h5>Content</h5>
-                            <small class="text-muted">QID31, QID67, QID32</small>
                         </div>
                         <div class="score-value" id="contentScore">-</div>
                     </div>
@@ -172,7 +169,6 @@
                     <div class="score-box">
                         <div>
                             <h5>Classroom</h5>
-                            <small class="text-muted" id="classroomQids">-</small>
                         </div>
                         <div class="score-value" id="classroomScore">-</div>
                     </div>
@@ -204,7 +200,7 @@
                 </div>
             </div>
 
-            <!-- Add this section after the metrics and before the detailed feedback -->
+            <!-- AI Summary Section -->
             <div id="aiSummary" class="ai-summary-section" style="display: none;">
                 <h4 class="mb-3">AI Feedback Analysis</h4>
                 <div class="ai-summary-box">
@@ -227,9 +223,16 @@
             const fileInput = document.getElementById('file');
             const enableAI = document.getElementById('enableAI').checked;
             
+            // Basic file validation
+            if (!fileInput.files || !fileInput.files[0]) {
+                showError('Please select a file');
+                return;
+            }
+            
             formData.append('file', fileInput.files[0]);
             formData.append('enableAI', enableAI);
             
+            // Show loading state
             document.getElementById('loading').style.display = 'block';
             document.getElementById('error').style.display = 'none';
             document.getElementById('results').style.display = 'none';
@@ -249,26 +252,28 @@
                 }
             } catch (error) {
                 showError('Error uploading file');
+                console.error('Upload error:', error);
             } finally {
                 document.getElementById('loading').style.display = 'none';
             }
         });
 
         function displayResults(data) {
+            // Update scores without QID references
             document.getElementById('overallScore').textContent = data['Overall Satisfaction'] || '-';
             document.getElementById('instructorScore').textContent = data['Instructor CSAT'] || '-';
             document.getElementById('contentScore').textContent = data['Content'] || '-';
             document.getElementById('classroomScore').textContent = data['Classroom'] || '-';
             
+            // Update delivery type
             if (data['Delivery_Type']) {
                 document.getElementById('deliveryType').style.display = 'block';
                 document.getElementById('deliveryTypeText').textContent = data['Delivery_Type'];
-                const classroomQids = data['Delivery_Type'].includes('Virtual') ? 
-                    'QID130, QID59' : 'QID58, QID59';
-                document.getElementById('classroomQids').textContent = classroomQids;
+            } else {
+                document.getElementById('deliveryType').style.display = 'none';
             }
 
-            // Show/hide AI summary section based on whether it's available
+            // Show/hide AI summary section
             const aiSummarySection = document.getElementById('aiSummary');
             if (data.ai_summary) {
                 document.getElementById('aiSummaryContent').textContent = data.ai_summary;

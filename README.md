@@ -33,7 +33,7 @@ A web application that analyzes course feedback data and generates comprehensive
 2. **Clone the Repository**
    ```bash
    git clone https://github.com/kyllew/classreport.git
-   cd class-report-calculator
+   cd classreport
    ```
 
 3. **Create Virtual Environment**
