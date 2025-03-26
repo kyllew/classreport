@@ -87,13 +87,20 @@ def get_bedrock_summary(feedback):
         print(f"Error getting Bedrock summary: {str(e)}")
         return None
 
-def analyze_instructor_ratings(df, enable_ai=False):
+def analyze_instructor_ratings(df, enable_ai=False, total_learners=0):
     """
     Analyze instructor ratings from the CSV file
     """
     try:
         results = {}
         
+        # Calculate response rate
+        total_responses = len(df)
+        response_rate = round((total_responses / total_learners * 100), 1) if total_learners > 0 else 0
+        results['response_rate'] = response_rate
+        results['total_responses'] = total_responses
+        results['total_learners'] = total_learners
+
         # Calculate Instructor CSAT (QID127, QID128, QID129)
         instructor_questions = ['QID127', 'QID128', 'QID129']
         instructor_ratings = []
@@ -224,6 +231,7 @@ def analyze():
         
         file = request.files['file']
         enable_ai = request.form.get('enableAI') == 'true'
+        total_learners = int(request.form.get('totalLearners', 0))
         
         if file.filename == '':
             return jsonify({'error': 'No file selected'}), 400
@@ -233,7 +241,7 @@ def analyze():
             df = pd.read_csv(file)
             
             # Analyze the data
-            results = analyze_instructor_ratings(df, enable_ai)
+            results = analyze_instructor_ratings(df, enable_ai, total_learners)
             
             if results is None:
                 return jsonify({'error': 'Error analyzing data'}), 500

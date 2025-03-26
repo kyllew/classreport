@@ -119,6 +119,11 @@
                     <label for="file" class="form-label">Upload CSV File</label>
                     <input type="file" class="form-control" id="file" accept=".csv" required>
                 </div>
+                <div class="mb-3">
+                    <label for="totalLearners" class="form-label">Total Number of Learners</label>
+                    <input type="number" class="form-control" id="totalLearners" min="1" required>
+                    <small class="form-text text-muted">Enter the total number of learners who attended the class</small>
+                </div>
                 <div class="mb-3 form-check">
                     <input type="checkbox" class="form-check-input" id="enableAI">
                     <label class="form-check-label" for="enableAI">Enable AI Analysis</label>
@@ -141,7 +146,16 @@
                 Delivery Type: <span id="deliveryTypeText"></span>
             </div>
             <div class="row g-4">
-                <div class="col-md-3">
+                <div class="col">
+                    <div class="score-box">
+                        <div>
+                            <h5>Response Rate</h5>
+                            <small class="text-muted" id="responseDetails">0 of 0 learners</small>
+                        </div>
+                        <div class="score-value" id="responseRate">-</div>
+                    </div>
+                </div>
+                <div class="col">
                     <div class="score-box">
                         <div>
                             <h5>Overall Satisfaction</h5>
@@ -149,7 +163,7 @@
                         <div class="score-value" id="overallScore">-</div>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col">
                     <div class="score-box">
                         <div>
                             <h5>Instructor CSAT</h5>
@@ -157,7 +171,7 @@
                         <div class="score-value" id="instructorScore">-</div>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col">
                     <div class="score-box">
                         <div>
                             <h5>Content</h5>
@@ -165,7 +179,7 @@
                         <div class="score-value" id="contentScore">-</div>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col">
                     <div class="score-box">
                         <div>
                             <h5>Classroom</h5>
@@ -222,6 +236,7 @@
             const formData = new FormData();
             const fileInput = document.getElementById('file');
             const enableAI = document.getElementById('enableAI').checked;
+            const totalLearners = document.getElementById('totalLearners').value;
             
             // Basic file validation
             if (!fileInput.files || !fileInput.files[0]) {
@@ -231,6 +246,7 @@
             
             formData.append('file', fileInput.files[0]);
             formData.append('enableAI', enableAI);
+            formData.append('totalLearners', totalLearners);
             
             // Show loading state
             document.getElementById('loading').style.display = 'block';
@@ -259,6 +275,13 @@
         });
 
         function displayResults(data) {
+            // Update response rate
+            if (data.response_rate) {
+                document.getElementById('responseRate').textContent = data.response_rate + '%';
+                document.getElementById('responseDetails').textContent = 
+                    `${data.total_responses} of ${data.total_learners} learners`;
+            }
+            
             // Update scores without QID references
             document.getElementById('overallScore').textContent = data['Overall Satisfaction'] || '-';
             document.getElementById('instructorScore').textContent = data['Instructor CSAT'] || '-';
