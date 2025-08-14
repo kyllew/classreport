@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request, jsonify, send_file
+from flask import Flask, render_template, request, jsonify, send_file, redirect, url_for, flash, session
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 import pandas as pd
 import os
 import boto3
@@ -11,6 +12,10 @@ import logging
 
 app = Flask(__name__)
 
+# Configure Flask app
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
+app.config['UPLOAD_FOLDER'] = 'uploads'
+
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -19,7 +24,28 @@ logger = logging.getLogger(__name__)
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'csv'}
 
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+# Initialize Flask-Login
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+login_manager.login_message = 'Please log in to access the Class Report Calculator.'
+login_manager.login_message_category = 'info'
+
+# Simple User class
+class User(UserMixin):
+    def __init__(self, id):
+        self.id = id
+
+# Temporary user credentials (replace with Cognito later)
+USERS = {
+    'instructor': 'instructor'
+}
+
+@login_manager.user_loader
+def load_user(user_id):
+    if user_id in USERS:
+        return User(user_id)
+    return None
 
 # Create a temporary directory for exports
 EXPORT_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'exports')
@@ -254,11 +280,36 @@ def analyze_instructor_ratings(df, enable_ai=False, total_learners=0):
         traceback.print_exc()
         return None
 
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        if username in USERS and USERS[username] == password:
+            user = User(username)
+            login_user(user)
+            next_page = request.args.get('next')
+            return redirect(next_page) if next_page else redirect(url_for('index'))
+        else:
+            flash('Invalid username or password', 'error')
+    
+    return render_template('login.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash('You have been logged out successfully', 'success')
+    return redirect(url_for('login'))
+
 @app.route('/')
+@login_required
 def index():
     return render_template('index.html')
 
 @app.route('/analyze', methods=['POST'])
+@login_required
 def analyze():
     try:
         if 'file' not in request.files:
@@ -289,6 +340,7 @@ def analyze():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/export', methods=['POST'])
+@login_required
 def export():
     try:
         logger.debug("Export route called")
