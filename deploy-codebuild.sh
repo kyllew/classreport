@@ -1,14 +1,13 @@
 #!/bin/bash
 
-# Simple CodeBuild Deployment (No Pipeline Complexity)
+# AWS CodeBuild CI/CD Pipeline Deployment Script
 set -e
 
 # Configuration
 AWS_REGION="us-east-1"
 CODEBUILD_STACK_NAME="classreport-codebuild"
 APP_STACK_NAME="classreport-stack"
-GITHUB_OWNER="kyllew"
-GITHUB_REPO="classreport"
+GITHUB_REPO_URL="https://github.com/kyllew/classreport.git"
 GITHUB_BRANCH="main"
 
 # Colors for output
@@ -18,28 +17,27 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-echo -e "${BLUE}🚀 Simple CodeBuild CI/CD Setup${NC}"
+echo -e "${BLUE}🚀 Setting up CodeBuild CI/CD Pipeline for Class Report Application${NC}"
 
 # Get AWS Account ID
 AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 echo -e "${GREEN}✓ AWS Account ID: ${AWS_ACCOUNT_ID}${NC}"
 
-# Step 1: Deploy Simple CodeBuild Infrastructure
+# Step 1: Deploy CodeBuild Infrastructure
 echo -e "${YELLOW}🏗️  Deploying CodeBuild infrastructure...${NC}"
 
 aws cloudformation deploy \
-  --template-file codebuild-simple.yaml \
+  --template-file codebuild-template.yaml \
   --stack-name ${CODEBUILD_STACK_NAME} \
   --parameter-overrides \
-    GitHubOwner=${GITHUB_OWNER} \
-    GitHubRepo=${GITHUB_REPO} \
+    GitHubRepoUrl=${GITHUB_REPO_URL} \
     GitHubBranch=${GITHUB_BRANCH} \
   --capabilities CAPABILITY_NAMED_IAM \
   --region ${AWS_REGION}
 
 echo -e "${GREEN}✓ CodeBuild infrastructure deployed${NC}"
 
-# Get outputs
+# Get CodeBuild outputs
 ECR_REPOSITORY_URI=$(aws cloudformation describe-stacks \
   --stack-name ${CODEBUILD_STACK_NAME} \
   --query "Stacks[0].Outputs[?OutputKey=='ECRRepositoryURI'].OutputValue" \
@@ -55,7 +53,7 @@ CODEBUILD_PROJECT_NAME=$(aws cloudformation describe-stacks \
 echo -e "${GREEN}✓ ECR Repository: ${ECR_REPOSITORY_URI}${NC}"
 echo -e "${GREEN}✓ CodeBuild Project: ${CODEBUILD_PROJECT_NAME}${NC}"
 
-# Step 2: Trigger initial build
+# Step 2: Initial Build (Optional - trigger first build)
 echo -e "${YELLOW}🔨 Starting initial build...${NC}"
 
 BUILD_ID=$(aws codebuild start-build \
@@ -64,10 +62,42 @@ BUILD_ID=$(aws codebuild start-build \
   --output text \
   --region ${AWS_REGION})
 
-echo -e "${GREEN}✓ Build started: ${BUILD_ID}${NC}"
-echo -e "${BLUE}Monitor at: https://console.aws.amazon.com/codesuite/codebuild/projects/${CODEBUILD_PROJECT_NAME}/build/${BUILD_ID}${NC}"
+echo -e "${GREEN}✓ Build started with ID: ${BUILD_ID}${NC}"
 
-# Step 3: Check if application infrastructure exists, if not deploy it
+# Step 3: Wait for build to complete (optional)
+echo -e "${YELLOW}⏳ Waiting for build to complete...${NC}"
+echo -e "${BLUE}You can monitor the build at: https://console.aws.amazon.com/codesuite/codebuild/projects/${CODEBUILD_PROJECT_NAME}/build/${BUILD_ID}${NC}"
+
+# Poll build status
+while true; do
+  BUILD_STATUS=$(aws codebuild batch-get-builds \
+    --ids ${BUILD_ID} \
+    --query "builds[0].buildStatus" \
+    --output text \
+    --region ${AWS_REGION})
+  
+  case ${BUILD_STATUS} in
+    "SUCCEEDED")
+      echo -e "${GREEN}✅ Build completed successfully!${NC}"
+      break
+      ;;
+    "FAILED"|"FAULT"|"STOPPED"|"TIMED_OUT")
+      echo -e "${RED}❌ Build failed with status: ${BUILD_STATUS}${NC}"
+      echo -e "${YELLOW}Check the build logs at: https://console.aws.amazon.com/codesuite/codebuild/projects/${CODEBUILD_PROJECT_NAME}/build/${BUILD_ID}${NC}"
+      exit 1
+      ;;
+    "IN_PROGRESS")
+      echo -e "${YELLOW}⏳ Build in progress...${NC}"
+      sleep 30
+      ;;
+    *)
+      echo -e "${YELLOW}⏳ Build status: ${BUILD_STATUS}${NC}"
+      sleep 30
+      ;;
+  esac
+done
+
+# Step 4: Check if application infrastructure exists, if not deploy it
 echo -e "${YELLOW}🏗️  Checking application infrastructure...${NC}"
 
 if aws cloudformation describe-stacks --stack-name ${APP_STACK_NAME} --region ${AWS_REGION} >/dev/null 2>&1; then
@@ -96,45 +126,14 @@ else
   echo -e "${GREEN}✓ Application infrastructure deployed${NC}"
 fi
 
-# Wait for build to complete
-echo -e "${YELLOW}⏳ Waiting for initial build to complete...${NC}"
-
-while true; do
-  BUILD_STATUS=$(aws codebuild batch-get-builds \
-    --ids ${BUILD_ID} \
-    --query "builds[0].buildStatus" \
-    --output text \
-    --region ${AWS_REGION})
-  
-  case ${BUILD_STATUS} in
-    "SUCCEEDED")
-      echo -e "${GREEN}✅ Build completed successfully!${NC}"
-      break
-      ;;
-    "FAILED"|"FAULT"|"STOPPED"|"TIMED_OUT")
-      echo -e "${RED}❌ Build failed with status: ${BUILD_STATUS}${NC}"
-      echo -e "${YELLOW}Check logs: https://console.aws.amazon.com/codesuite/codebuild/projects/${CODEBUILD_PROJECT_NAME}/build/${BUILD_ID}${NC}"
-      break
-      ;;
-    "IN_PROGRESS")
-      echo -e "${YELLOW}⏳ Build in progress...${NC}"
-      sleep 30
-      ;;
-    *)
-      echo -e "${YELLOW}⏳ Build status: ${BUILD_STATUS}${NC}"
-      sleep 30
-      ;;
-  esac
-done
-
 # Get application URL
 LOAD_BALANCER_URL=$(aws cloudformation describe-stacks \
   --stack-name ${APP_STACK_NAME} \
   --query "Stacks[0].Outputs[?OutputKey=='LoadBalancerURL'].OutputValue" \
   --output text \
-  --region ${AWS_REGION} 2>/dev/null || echo "Will be available after ECS deployment")
+  --region ${AWS_REGION} 2>/dev/null || echo "Not deployed yet")
 
-echo -e "${GREEN}🎉 Simple CodeBuild Setup Complete!${NC}"
+echo -e "${GREEN}🎉 CodeBuild CI/CD Pipeline Setup Complete!${NC}"
 echo -e "${BLUE}📋 Deployment Summary:${NC}"
 echo -e "CodeBuild Stack: ${CODEBUILD_STACK_NAME}"
 echo -e "Application Stack: ${APP_STACK_NAME}"
@@ -142,16 +141,21 @@ echo -e "ECR Repository: ${ECR_REPOSITORY_URI}"
 echo -e "CodeBuild Project: ${CODEBUILD_PROJECT_NAME}"
 echo -e "Application URL: ${LOAD_BALANCER_URL}"
 echo -e ""
-echo -e "${YELLOW}🔄 How to Deploy Updates:${NC}"
-echo -e "1. Push code changes to GitHub"
-echo -e "2. Manually trigger build:"
-echo -e "   ${GREEN}aws codebuild start-build --project-name ${CODEBUILD_PROJECT_NAME}${NC}"
-echo -e "3. Or use the AWS Console to trigger builds"
+echo -e "${YELLOW}🔄 CI/CD Pipeline Features:${NC}"
+echo -e "✅ Automatic builds on GitHub push to ${GITHUB_BRANCH}"
+echo -e "✅ Docker image building and pushing to ECR"
+echo -e "✅ Automatic ECS service updates"
+echo -e "✅ Build logs in CloudWatch"
+echo -e "✅ Image vulnerability scanning"
 echo -e ""
-echo -e "${BLUE}📊 Monitor your deployment:${NC}"
-echo -e "1. CodeBuild: https://console.aws.amazon.com/codesuite/codebuild/projects/${CODEBUILD_PROJECT_NAME}"
-echo -e "2. ECR: https://console.aws.amazon.com/ecr/repositories/classreport"
-echo -e "3. ECS: https://console.aws.amazon.com/ecs/home?region=${AWS_REGION}#/clusters/classreport-cluster/services"
+echo -e "${BLUE}📊 Monitor your pipeline:${NC}"
+echo -e "1. CodeBuild Console: https://console.aws.amazon.com/codesuite/codebuild/projects/${CODEBUILD_PROJECT_NAME}"
+echo -e "2. ECR Repository: https://console.aws.amazon.com/ecr/repositories/classreport"
+echo -e "3. ECS Service: https://console.aws.amazon.com/ecs/home?region=${AWS_REGION}#/clusters/classreport-cluster/services"
 echo -e "4. Application: ${LOAD_BALANCER_URL}"
 echo -e ""
-echo -e "${GREEN}✅ Your beautiful Class Report app is now deployed with CI/CD!${NC}"
+echo -e "${GREEN}🚀 Next Steps:${NC}"
+echo -e "1. Push code changes to GitHub ${GITHUB_BRANCH} branch"
+echo -e "2. CodeBuild will automatically build and deploy"
+echo -e "3. Monitor builds in AWS Console"
+echo -e "4. Your app will be updated automatically!"

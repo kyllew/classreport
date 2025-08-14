@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  classreport:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=development
+      - AWS_DEFAULT_REGION=us-east-1
+    volumes:
+      - ./uploads:/app/uploads
+      - ./exports:/app/exports
+    env_file:
+      - .env
+    restart: unless-stopped
