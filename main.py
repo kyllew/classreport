@@ -1,16 +1,39 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_file
 import pandas as pd
 import os
 import boto3
 import json
+import tempfile
+from datetime import datetime
+import atexit
+import shutil
+import logging
 
 app = Flask(__name__)
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 # Configure upload folder
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'csv'}
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+# Create a temporary directory for exports
+EXPORT_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'exports')
+os.makedirs(EXPORT_FOLDER, exist_ok=True)
+
+# Cleanup function to remove temporary files
+def cleanup_temp_files():
+    try:
+        shutil.rmtree(EXPORT_FOLDER)
+    except Exception as e:
+        logger.error(f"Error cleaning up temporary files: {str(e)}")
+
+# Register cleanup function
+atexit.register(cleanup_temp_files)
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -87,13 +110,33 @@ def get_bedrock_summary(feedback):
         print(f"Error getting Bedrock summary: {str(e)}")
         return None
 
-def analyze_instructor_ratings(df, enable_ai=False):
+def analyze_instructor_ratings(df, enable_ai=False, total_learners=0):
     """
     Analyze instructor ratings from the CSV file
     """
     try:
         results = {}
         
+        # Calculate response rate - count only rows with actual data
+        # Remove completely empty rows and count valid responses
+        df_clean = df.dropna(how='all')  # Remove completely empty rows
+        
+        # Further filter to ensure we have meaningful responses
+        # Count rows that have at least some non-null values in key columns
+        key_columns = [col for col in df_clean.columns if col.startswith('QID')]
+        if key_columns:
+            # Count rows that have at least one non-null value in QID columns
+            valid_mask = df_clean[key_columns].notna().any(axis=1)
+            total_responses = valid_mask.sum()
+        else:
+            # Fallback: count non-empty rows
+            total_responses = len(df_clean)
+        
+        response_rate = round((total_responses / total_learners * 100), 1) if total_learners > 0 else 0
+        results['response_rate'] = float(response_rate)
+        results['total_responses'] = int(total_responses)
+        results['total_learners'] = int(total_learners)
+
         # Calculate Instructor CSAT (QID127, QID128, QID129)
         instructor_questions = ['QID127', 'QID128', 'QID129']
         instructor_ratings = []
@@ -106,7 +149,7 @@ def analyze_instructor_ratings(df, enable_ai=False):
         
         if instructor_ratings:
             instructor_csat = round(float(sum(instructor_ratings)) / len(instructor_ratings), 2)
-            results['Instructor CSAT'] = instructor_csat
+            results['Instructor CSAT'] = float(instructor_csat)
         
         # Calculate Combined Overall Score (QID1 and QID2)
         overall_ratings = []
@@ -121,7 +164,7 @@ def analyze_instructor_ratings(df, enable_ai=False):
         
         if overall_ratings:
             overall_score = round(float(sum(overall_ratings)) / len(overall_ratings), 2)
-            results['Overall Satisfaction'] = overall_score
+            results['Overall Satisfaction'] = float(overall_score)
             
         # Calculate Content Score (QID31, QID67, QID32)
         content_questions = ['QID31', 'QID67', 'QID32']
@@ -135,7 +178,7 @@ def analyze_instructor_ratings(df, enable_ai=False):
         
         if content_ratings:
             content_score = round(float(sum(content_ratings)) / len(content_ratings), 2)
-            results['Content'] = content_score
+            results['Content'] = float(content_score)
             
         # Determine if ILT or VILT and calculate Classroom Score
         # Check if it's VILT by looking for QID130 responses
@@ -170,7 +213,7 @@ def analyze_instructor_ratings(df, enable_ai=False):
         
         if classroom_ratings:
             classroom_score = round(float(sum(classroom_ratings)) / len(classroom_ratings), 2)
-            results['Classroom'] = classroom_score
+            results['Classroom'] = float(classroom_score)
             results['Delivery_Type'] = 'Virtual (VILT)' if is_vilt else 'In-Person (ILT)'
         
         # Extract feedback
@@ -224,6 +267,7 @@ def analyze():
         
         file = request.files['file']
         enable_ai = request.form.get('enableAI') == 'true'
+        total_learners = int(request.form.get('totalLearners', 0))
         
         if file.filename == '':
             return jsonify({'error': 'No file selected'}), 400
@@ -233,7 +277,7 @@ def analyze():
             df = pd.read_csv(file)
             
             # Analyze the data
-            results = analyze_instructor_ratings(df, enable_ai)
+            results = analyze_instructor_ratings(df, enable_ai, total_learners)
             
             if results is None:
                 return jsonify({'error': 'Error analyzing data'}), 500
@@ -243,6 +287,61 @@ def analyze():
         return jsonify({'error': 'Invalid file type'}), 400
         
     except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/export', methods=['POST'])
+def export():
+    try:
+        logger.debug("Export route called")
+        
+        # Get the analysis results from the request
+        results = request.get_json()
+        logger.debug(f"Received results: {results is not None}")
+        
+        if not results:
+            logger.error("No data received for export")
+            return jsonify({'error': 'No data to export'}), 400
+            
+        # Render the export template with the results
+        try:
+            html_content = render_template('export.html', results=results)
+            logger.debug("Template rendered successfully")
+        except Exception as e:
+            logger.error(f"Error rendering template: {str(e)}")
+            return jsonify({'error': f'Error rendering template: {str(e)}'}), 500
+        
+        # Generate filename with timestamp
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f'class_report_analysis_{timestamp}.html'
+        file_path = os.path.join(EXPORT_FOLDER, filename)
+        
+        logger.debug(f"Writing to file: {file_path}")
+        
+        # Write the HTML content to the file
+        try:
+            with open(file_path, 'w', encoding='utf-8') as f:
+                f.write(html_content)
+            logger.debug("File written successfully")
+        except Exception as e:
+            logger.error(f"Error writing file: {str(e)}")
+            return jsonify({'error': f'Error writing file: {str(e)}'}), 500
+            
+        # Return the file for download
+        try:
+            response = send_file(
+                file_path,
+                as_attachment=True,
+                download_name=filename,
+                mimetype='text/html'
+            )
+            logger.debug("File sent successfully")
+            return response
+        except Exception as e:
+            logger.error(f"Error sending file: {str(e)}")
+            return jsonify({'error': f'Error sending file: {str(e)}'}), 500
+        
+    except Exception as e:
+        logger.error(f"Unexpected error in export: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':

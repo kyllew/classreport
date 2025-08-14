@@ -7,105 +7,343 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --primary-color: #6366f1;
+            --secondary-color: #8b5cf6;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --info-color: #3b82f6;
+            --light-bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        }
+
+        * {
+            transition: all 0.2s ease-in-out;
+        }
+
         body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
             padding: 20px;
-            background-color: #f8f9fa;
+            color: var(--text-primary);
         }
+
         .container {
-            max-width: 1200px;
-            background-color: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            max-width: 1400px;
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: var(--shadow-xl);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
+
+        h1 {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .form-section {
+            background: var(--light-bg);
+            padding: 30px;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 30px;
+        }
+
+        .form-control {
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 12px 16px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .btn {
+            border-radius: 12px;
+            padding: 12px 24px;
+            font-weight: 600;
+            font-size: 1rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success-color), #059669);
+            color: white;
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
         .score-box {
-            border: 1px solid #dee2e6;
-            padding: 20px;
-            margin-bottom: 20px;
-            border-radius: 5px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 25px;
+            border-radius: 16px;
             text-align: center;
             height: 100%;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            background-color: white;
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
         }
+
+        .score-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .score-box:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .score-box:hover::before {
+            opacity: 1;
+        }
+
         .score-value {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: #0d6efd;
-            margin: 15px 0;
+            font-size: 3rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 20px 0;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
+
+        .score-box h5 {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
         .loading {
             display: none;
             text-align: center;
-            margin: 20px 0;
+            margin: 40px 0;
+            padding: 40px;
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: var(--shadow-md);
         }
+
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+            border-width: 0.3em;
+        }
+
         .feedback-section {
-            margin-top: 30px;
-            padding: 15px;
-            border: 1px solid #dee2e6;
-            border-radius: 5px;
-            background-color: white;
+            margin-top: 40px;
+            padding: 30px;
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
         }
-        .feedback-container {
-            margin-top: 10px;
+
+        .feedback-section h4 {
+            color: var(--text-primary);
+            font-weight: 600;
+            margin-bottom: 25px;
         }
-        
-        .feedback-item {
-            margin-bottom: 8px;
-            padding: 8px 12px;
-            border-radius: 4px;
-            background-color: #f8f9fa;
-            font-size: 0.85rem;
-            line-height: 1.4;
-        }
-        
-        #positiveFeedback .feedback-item {
-            border-left: 3px solid #198754;
-        }
-        
-        #recommendationsFeedback .feedback-item {
-            border-left: 3px solid #0d6efd;
-        }
-        
+
         .feedback-box {
             height: 100%;
-            padding: 10px;
+            padding: 20px;
+            background: var(--light-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
         }
-        
+
         .feedback-box h6 {
-            font-size: 0.9rem;
+            font-size: 1rem;
             font-weight: 600;
+            margin-bottom: 15px;
         }
-        
-        @media (max-width: 767.98px) {
-            .feedback-box:first-child {
-                border-bottom: 1px solid #dee2e6;
-                margin-bottom: 15px;
-                padding-bottom: 15px;
-            }
-        }
-        .ai-summary-section {
-            margin: 20px 0;
-        }
-        
-        .ai-summary-box {
-            padding: 15px;
-            border: 1px solid #dee2e6;
-            border-radius: 5px;
-            background-color: #f8f9fa;
-        }
-        
-        .ai-summary-content {
+
+        .feedback-item {
+            margin-bottom: 12px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            background: var(--card-bg);
             font-size: 0.9rem;
             line-height: 1.5;
-            white-space: pre-line;
+            box-shadow: var(--shadow-sm);
+            border-left: 4px solid transparent;
+            transition: all 0.2s ease;
         }
-        
+
+        .feedback-item:hover {
+            transform: translateX(4px);
+            box-shadow: var(--shadow-md);
+        }
+
+        #positiveFeedback .feedback-item {
+            border-left-color: var(--success-color);
+        }
+
+        #recommendationsFeedback .feedback-item {
+            border-left-color: var(--info-color);
+        }
+
+        .ai-summary-section {
+            margin: 30px 0;
+        }
+
+        .ai-summary-box {
+            padding: 25px;
+            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+            border: 1px solid #bae6fd;
+            border-radius: 16px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .ai-summary-content {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            white-space: pre-line;
+            color: var(--text-primary);
+        }
+
         .bi-robot {
-            color: #0d6efd;
-            font-size: 1.2rem;
+            color: var(--info-color);
+            font-size: 1.3rem;
+        }
+
+        .alert {
+            border-radius: 12px;
+            border: none;
+            padding: 16px 20px;
+            font-weight: 500;
+        }
+
+        .alert-info {
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+            color: #1e40af;
+            border-left: 4px solid var(--info-color);
+        }
+
+        .alert-danger {
+            background: linear-gradient(135deg, #fee2e2, #fecaca);
+            color: #dc2626;
+            border-left: 4px solid var(--danger-color);
+        }
+
+        .results-header {
+            background: var(--light-bg);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            border: 1px solid var(--border-color);
+        }
+
+        .results-header h3 {
+            color: var(--text-primary);
+            font-weight: 600;
+            margin: 0;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .score-value {
+                font-size: 2.5rem;
+            }
+            
+            .feedback-box:first-child {
+                margin-bottom: 20px;
+            }
+        }
+
+        /* Animation for results appearing */
+        .fade-in {
+            animation: fadeIn 0.6s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Score box animations */
+        .score-animate {
+            animation: scoreAppear 0.8s ease-out;
+        }
+
+        @keyframes scoreAppear {
+            from {
+                opacity: 0;
+                transform: scale(0.8) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
         }
     </style>
 </head>
@@ -113,18 +351,38 @@
     <div class="container">
         <h1 class="mb-4">Class Report Calculator</h1>
         
-        <div class="mb-4">
+        <div class="form-section">
             <form id="uploadForm">
-                <div class="mb-3">
-                    <label for="file" class="form-label">Upload CSV File</label>
-                    <input type="file" class="form-control" id="file" accept=".csv" required>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="file" class="form-label fw-semibold">
+                            <i class="bi bi-cloud-upload me-2"></i>Upload CSV File
+                        </label>
+                        <input type="file" class="form-control" id="file" accept=".csv" required>
+                        <small class="form-text text-muted">Select your course feedback CSV file</small>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="totalLearners" class="form-label fw-semibold">
+                            <i class="bi bi-people me-2"></i>Total Number of Learners
+                        </label>
+                        <input type="number" class="form-control" id="totalLearners" min="1" required placeholder="e.g., 25">
+                        <small class="form-text text-muted">Enter the total number of learners who attended the class</small>
+                    </div>
                 </div>
-                <div class="mb-3 form-check">
-                    <input type="checkbox" class="form-check-input" id="enableAI">
-                    <label class="form-check-label" for="enableAI">Enable AI Analysis</label>
-                    <small class="form-text text-muted d-block">Uses AWS Bedrock to analyze feedback (additional charges may apply)</small>
+                <div class="mb-4">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="enableAI">
+                        <label class="form-check-label fw-semibold" for="enableAI">
+                            <i class="bi bi-robot me-2"></i>Enable AI Analysis
+                        </label>
+                        <small class="form-text text-muted d-block">Uses AWS Bedrock to analyze feedback and provide insights (additional charges may apply)</small>
+                    </div>
                 </div>
-                <button type="submit" class="btn btn-primary">Analyze</button>
+                <div class="text-center">
+                    <button type="submit" class="btn btn-primary btn-lg px-5">
+                        <i class="bi bi-graph-up me-2"></i>Analyze Report
+                    </button>
+                </div>
             </form>
         </div>
 
@@ -135,13 +393,29 @@
             <p>Analyzing data...</p>
         </div>
 
-        <div id="results" style="display: none;">
-            <h3 class="mb-4">Analysis Results</h3>
+        <div id="results" style="display: none;" class="fade-in">
+            <div class="results-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h3><i class="bi bi-bar-chart me-2"></i>Analysis Results</h3>
+                    <button id="exportBtn" class="btn btn-success">
+                        <i class="bi bi-download me-2"></i>Export Report
+                    </button>
+                </div>
+            </div>
             <div id="deliveryType" class="alert alert-info mb-4" style="display: none;">
                 Delivery Type: <span id="deliveryTypeText"></span>
             </div>
             <div class="row g-4">
-                <div class="col-md-3">
+                <div class="col">
+                    <div class="score-box">
+                        <div>
+                            <h5>Response Rate</h5>
+                            <small class="text-muted" id="responseDetails">0 of 0 learners</small>
+                        </div>
+                        <div class="score-value" id="responseRate">-</div>
+                    </div>
+                </div>
+                <div class="col">
                     <div class="score-box">
                         <div>
                             <h5>Overall Satisfaction</h5>
@@ -149,7 +423,7 @@
                         <div class="score-value" id="overallScore">-</div>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col">
                     <div class="score-box">
                         <div>
                             <h5>Instructor CSAT</h5>
@@ -157,7 +431,7 @@
                         <div class="score-value" id="instructorScore">-</div>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col">
                     <div class="score-box">
                         <div>
                             <h5>Content</h5>
@@ -165,7 +439,7 @@
                         <div class="score-value" id="contentScore">-</div>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col">
                     <div class="score-box">
                         <div>
                             <h5>Classroom</h5>
@@ -222,6 +496,7 @@
             const formData = new FormData();
             const fileInput = document.getElementById('file');
             const enableAI = document.getElementById('enableAI').checked;
+            const totalLearners = document.getElementById('totalLearners').value;
             
             // Basic file validation
             if (!fileInput.files || !fileInput.files[0]) {
@@ -231,6 +506,7 @@
             
             formData.append('file', fileInput.files[0]);
             formData.append('enableAI', enableAI);
+            formData.append('totalLearners', totalLearners);
             
             // Show loading state
             document.getElementById('loading').style.display = 'block';
@@ -259,6 +535,16 @@
         });
 
         function displayResults(data) {
+            // Store the results data for export
+            window.currentResults = data;
+            
+            // Update response rate
+            if (data.response_rate) {
+                document.getElementById('responseRate').textContent = data.response_rate + '%';
+                document.getElementById('responseDetails').textContent = 
+                    `${data.total_responses} of ${data.total_learners} learners`;
+            }
+            
             // Update scores without QID references
             document.getElementById('overallScore').textContent = data['Overall Satisfaction'] || '-';
             document.getElementById('instructorScore').textContent = data['Instructor CSAT'] || '-';
@@ -285,7 +571,18 @@
             // Display feedback
             displayFeedback(data.feedback);
             
-            document.getElementById('results').style.display = 'block';
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.style.display = 'block';
+            resultsDiv.classList.add('fade-in');
+            
+            // Add animation to score boxes
+            setTimeout(() => {
+                document.querySelectorAll('.score-box').forEach((box, index) => {
+                    setTimeout(() => {
+                        box.classList.add('score-animate');
+                    }, index * 100);
+                });
+            }, 200);
         }
 
         function displayFeedback(feedback) {
@@ -324,6 +621,42 @@
             document.getElementById('results').style.display = 'none';
             document.getElementById('loading').style.display = 'none';
         }
+
+        // Add export button functionality
+        document.getElementById('exportBtn').addEventListener('click', async () => {
+            if (!window.currentResults) {
+                showError('No results to export');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/export', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(window.currentResults)
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Export failed');
+                }
+                
+                // Create a blob from the response and trigger download
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `class_report_analysis_${new Date().toISOString().replace(/[:.]/g, '-')}.html`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+            } catch (error) {
+                showError('Error exporting report: ' + error.message);
+            }
+        });
     </script>
 </body>
 </html> 
