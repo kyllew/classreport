@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, jsonify, send_file, redirect, url_for, flash, session
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from functools import wraps
 import pandas as pd
 import os
 import boto3
@@ -24,28 +24,19 @@ logger = logging.getLogger(__name__)
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'csv'}
 
-# Initialize Flask-Login
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = 'login'
-login_manager.login_message = 'Please log in to access the Class Report Calculator.'
-login_manager.login_message_category = 'info'
-
-# Simple User class
-class User(UserMixin):
-    def __init__(self, id):
-        self.id = id
-
 # Temporary user credentials (replace with Cognito later)
 USERS = {
     'instructor': 'instructor'
 }
 
-@login_manager.user_loader
-def load_user(user_id):
-    if user_id in USERS:
-        return User(user_id)
-    return None
+# Simple login required decorator
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            return redirect(url_for('login', next=request.url))
+        return f(*args, **kwargs)
+    return decorated_function
 
 # Create a temporary directory for exports
 EXPORT_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'exports')
@@ -287,8 +278,7 @@ def login():
         password = request.form.get('password')
         
         if username in USERS and USERS[username] == password:
-            user = User(username)
-            login_user(user)
+            session['user_id'] = username
             next_page = request.args.get('next')
             return redirect(next_page) if next_page else redirect(url_for('index'))
         else:
@@ -299,7 +289,7 @@ def login():
 @app.route('/logout')
 @login_required
 def logout():
-    logout_user()
+    session.pop('user_id', None)
     flash('You have been logged out successfully', 'success')
     return redirect(url_for('login'))
 
