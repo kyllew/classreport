@@ -293,6 +293,11 @@ def logout():
     flash('You have been logged out successfully', 'success')
     return redirect(url_for('login'))
 
+@app.route('/health')
+def health_check():
+    """Health check endpoint for load balancer"""
+    return {'status': 'healthy', 'timestamp': datetime.now().isoformat()}, 200
+
 @app.route('/')
 @login_required
 def index():
